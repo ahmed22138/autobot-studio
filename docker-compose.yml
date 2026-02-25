@@ -1,0 +1,84 @@
+# =====================================================
+# AutoBot Studio - Docker Compose (Full Stack)
+# Frontend (Next.js) + Backend (FastAPI)
+# =====================================================
+
+version: "3.8"
+
+services:
+
+  # ─── Python FastAPI Backend ───────────────────────
+  autobot-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: autobot-backend:latest
+    container_name: autobot-backend
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      SUPABASE_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ─── Next.js Frontend ─────────────────────────────
+  autobot-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Public env vars (baked into Next.js build)
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+        SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+    image: autobot-studio:latest
+    container_name: autobot-frontend
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      # Server-side only env vars (injected at runtime, NOT baked into build)
+      NODE_ENV: production
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_MEDIUM_PRICE_ID: ${STRIPE_MEDIUM_PRICE_ID}
+      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+
+    depends_on:
+      autobot-backend:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: autobot-network

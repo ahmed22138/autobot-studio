@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: autobot-studio
+  labels:
+    app: autobot-studio
+    environment: production

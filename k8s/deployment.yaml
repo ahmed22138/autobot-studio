@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autobot-frontend
+  namespace: autobot-studio
+  labels:
+    app: autobot-frontend
+    version: "1.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: autobot-frontend
+  template:
+    metadata:
+      labels:
+        app: autobot-frontend
+    spec:
+      containers:
+        - name: autobot-frontend
+          image: autobot-studio:latest
+          imagePullPolicy: Never  # Use local image from Minikube
+          ports:
+            - containerPort: 3000
+
+          # Environment from ConfigMap (non-sensitive)
+          envFrom:
+            - configMapRef:
+                name: autobot-config
+
+          # Individual env vars from secrets (sensitive)
+          env:
+            - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
+
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: STRIPE_SECRET_KEY
+
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: STRIPE_WEBHOOK_SECRET
+
+            - name: STRIPE_MEDIUM_PRICE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: STRIPE_MEDIUM_PRICE_ID
+
+            - name: STRIPE_PREMIUM_PRICE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: STRIPE_PREMIUM_PRICE_ID
+
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autobot-secrets
+                  key: EMAIL_PASSWORD
+
+          # Resource limits
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3

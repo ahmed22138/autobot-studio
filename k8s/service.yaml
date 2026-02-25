@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: autobot-service
+  namespace: autobot-studio
+  labels:
+    app: autobot-frontend
+spec:
+  type: NodePort  # NodePort for Minikube access
+  selector:
+    app: autobot-frontend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80        # Service port
+      targetPort: 3000  # Container port
+      nodePort: 30080   # External port (access via minikube IP:30080)

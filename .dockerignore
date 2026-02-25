@@ -1,0 +1,40 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Next.js build output
+.next
+
+# Environment files (NEVER include in Docker image)
+.env
+.env.local
+.env.production
+.env*.local
+
+# Git
+.git
+.gitignore
+
+# Documentation files
+*.md
+!README.md
+
+# SQL files
+*.sql
+
+# Development files
+.eslintrc*
+.prettierrc*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__

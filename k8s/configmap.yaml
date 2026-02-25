@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autobot-config
+  namespace: autobot-studio
+data:
+  # Public environment variables (non-sensitive)
+  NEXT_PUBLIC_SUPABASE_URL: "https://atyjeaegzgtpbdawbjnq.supabase.co"
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+  NODE_ENV: "production"
+  SUPPORT_EMAIL: "workb9382@gmail.com"
+  EMAIL_USER: "workb9382@gmail.com"

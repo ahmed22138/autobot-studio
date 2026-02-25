@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+
+# Environment variables (contains API keys - NEVER commit!)
+.env
+.env.*
