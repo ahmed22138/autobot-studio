@@ -25,9 +25,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Network error - treat as unauthenticated
+    user = null;
+  }
 
   const protectedPaths = ["/dashboard", "/Agent"];
   const isProtected = protectedPaths.some((path) =>
