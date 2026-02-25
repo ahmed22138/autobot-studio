@@ -14,17 +14,37 @@ app = FastAPI(title="Autonomous AI Agent Platform")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev ke liye
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# In-memory agent store (primary storage - no auth required)
+# Also tries to sync to Supabase
+agents_store: dict = {}
 
 
 # 🔹 CREATE AGENT
 @app.post("/create-agent", response_model=AgentResponse)
 def create_agent(data: AgentCreate):
     agent_id = str(uuid4())
+
+    agent_data = {
+        "agent_id": agent_id,
+        "name": data.name,
+        "description": data.description,
+        "tone": data.tone,
+    }
+
+    # Save to in-memory store (always works)
+    agents_store[agent_id] = agent_data
+
+    # Also try to save to Supabase (may fail if RLS/auth not configured)
+    try:
+        supabase.table("agents").insert(agent_data).execute()
+    except Exception:
+        pass  # In-memory store is the fallback
 
     return AgentResponse(
         agent_id=agent_id,
@@ -36,75 +56,27 @@ def create_agent(data: AgentCreate):
 @app.post("/chat/{agent_id}", response_model=ChatResponse)
 def chat(agent_id: str, req: ChatRequest):
 
-    result = (
-        supabase
-        .table("agents")
-        .select("*")
-        .eq("agent_id", agent_id)
-        .single()
-        .execute()
-    )
+    # Check in-memory store first (fast)
+    agent_data = agents_store.get(agent_id)
 
-    if not result.data:
+    # Fallback: try Supabase
+    if not agent_data:
+        try:
+            result = (
+                supabase
+                .table("agents")
+                .select("*")
+                .eq("agent_id", agent_id)
+                .single()
+                .execute()
+            )
+            agent_data = result.data
+        except Exception:
+            agent_data = None
+
+    if not agent_data:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    reply = run_agent(result.data, req.message)
+    reply = run_agent(agent_data, req.message)
 
     return ChatResponse(reply=reply)
-
-
-# from fastapi import FastAPI
-# from pydantic import BaseModel
-# from uuid import uuid4
-# from app.database import supabase
-# from app.agent import run_agent
-
-# app = FastAPI(tittle="Autonomous AI Agent Platform")
-
-# class AgentCreate(BaseModel):
-#     name: str
-#     description: str
-#     tone: str
-
-# class ChatRequest(BaseModel):
-#     message: str
-
-# @app.post("/create-agent")
-# def create_agent(data: AgentCreate):
-#     agent_id = str(uuid4())
-
-#     supabase.table("agents").insert({
-#         "id": agent_id,
-#         "name": data.name,
-#         "description": data.description,
-#         "tone": data.tone
-#     }).execute()
-
-#     return {
-#         "agent_id": agent_id,
-#         "embed_url": f"http://localhost:3000/chatbot/{agent_id}"
-#     }
-
-# @app.post("/chat/{agent_id}")
-# def chat(agent_id: str, req: ChatRequest):
-#     agent = supabase.table("agents").select("*").eq("id", agent_id).single().execute().data
-#     reply = run_agent(agent, req.message)
-#     return {"reply": reply}
-
-
-# # from fastapi import FastAPI
-# # from pydantic import BaseModel
-# # from chat import ask_agent
-
-# # app = FastAPI(title="Ahmed Malik Autonomous AI Agent")
-
-# # class ChatRequest(BaseModel):
-# #     message: str
-
-# # @app.post("/chat")
-# # def chat(req: ChatRequest):
-# #     reply = ask_agent(req.message)
-# #     return {"reply": reply}
-
-
-
