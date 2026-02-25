@@ -3,9 +3,8 @@ import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
-const supabaseAdmin = createAdminClient();
-
 export async function POST(request: NextRequest) {
+  const supabaseAdmin = createAdminClient();
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
