@@ -8,7 +8,7 @@ import { Bot, Loader2, AlertTriangle, Lock, ArrowUpRight } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { createClient } from "@/lib/supabase/client";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://autobot-backend-wowh.onrender.com";
 
 interface UsageData {
   plan: string;
