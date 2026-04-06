@@ -197,7 +197,7 @@
     addMessage(userText, "user");
     const botMsg = addMessage("...", "bot");
 
-    const res = await fetch(`http://localhost:8000/chat/${agentId}`, {
+    const res = await fetch(`https://autobot-backend-wowh.onrender.com/chat/${agentId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
