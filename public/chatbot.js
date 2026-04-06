@@ -529,6 +529,11 @@
 
       typing.remove();
 
+      if (res.status === 403) {
+        addMessage("⚠️ This agent is currently inactive.", "bot");
+        return;
+      }
+
       if (!res.ok) {
         addMessage("⚠️ Sorry, could not connect. Please try again.", "bot");
         return;
