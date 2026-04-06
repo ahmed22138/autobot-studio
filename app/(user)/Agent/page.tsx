@@ -72,27 +72,37 @@ export default function CreateAgent() {
         return;
       }
 
-      // Generate unique agent ID
-      const agent_id = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      // Save agent directly to Supabase (no external API needed)
-      const { data, error } = await supabase.from("agents").insert({
+      // Step 1: Create agent in backend (saves to memory + Supabase)
+      const res = await fetch(`${API}/create-agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+          tone: form.tone,
+        }),
+      });
+
+      if (!res.ok) {
+        alert("Failed to create agent. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const { agent_id } = await res.json();
+
+      // Step 2: Also save to Supabase with user_id for dashboard
+      await supabase.from("agents").upsert({
         user_id: user.id,
         agent_id: agent_id,
         name: form.name,
         description: form.description,
         tone: form.tone,
         status: "active",
-      }).select();
+      });
 
-      if (error) {
-        console.error("Error creating agent:", error);
-        alert("Failed to create agent. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("✅ Agent created successfully:", data);
       setLoading(false);
       router.push("/dashboard");
     } catch (error) {
