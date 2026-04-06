@@ -106,8 +106,14 @@ export default function ChatbotPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: userMsg }),
     });
+
+    if (!res.ok) {
+      await typeEffect("Sorry, I could not connect to the agent. Please try again.");
+      return;
+    }
+
     const data = await res.json();
-    await typeEffect(data.reply);
+    await typeEffect(data.reply || "Sorry, no response from agent.");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
