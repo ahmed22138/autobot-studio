@@ -31,6 +31,7 @@ export default function CreateAgent() {
     name: "",
     description: "",
     tone: "friendly",
+    type: "general",
     welcomeMessage: "",
     responseLength: "medium",
     knowledgeBase: "",
@@ -100,6 +101,7 @@ export default function CreateAgent() {
         name: form.name,
         description: form.description,
         tone: form.tone,
+        type: form.type,
         status: "active",
       });
 
@@ -211,6 +213,26 @@ export default function CreateAgent() {
                   <option value="professional" className="bg-zinc-900">Professional</option>
                   <option value="casual" className="bg-zinc-900">Casual</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1.5">
+                  Chatbot Type
+                </label>
+                <select
+                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value })}
+                >
+                  <option value="general" className="bg-zinc-900">🤖 General Bot</option>
+                  <option value="support" className="bg-zinc-900">🎧 Support Bot</option>
+                  <option value="sales" className="bg-zinc-900">💰 Sales Bot</option>
+                </select>
+                <p className="text-zinc-500 text-xs mt-1.5">
+                  {form.type === "sales" && "Captures leads, recommends plans, converts visitors"}
+                  {form.type === "support" && "Handles support tickets and troubleshooting"}
+                  {form.type === "general" && "Custom AI assistant for any use case"}
+                </p>
               </div>
             </div>
 
