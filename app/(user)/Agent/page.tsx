@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Bot, Loader2, AlertTriangle, Lock, ArrowUpRight } from "lucide-react";
+import { Bot, Loader2, AlertTriangle, Lock, ArrowUpRight, Plus, Trash2, Package, CreditCard } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { createClient } from "@/lib/supabase/client";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://autobot-backend-wowh.onrender.com";
 
 interface UsageData {
   plan: string;
@@ -25,6 +23,21 @@ interface UsageData {
   };
 }
 
+interface Product {
+  name: string;
+  price: string;
+  description: string;
+}
+
+interface PaymentConfig {
+  cash_on_delivery: boolean;
+  easypaisa_number: string;
+  jazzcash_number: string;
+  bank_name: string;
+  bank_account: string;
+  bank_account_name: string;
+}
+
 export default function CreateAgent() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -39,6 +52,20 @@ export default function CreateAgent() {
     customCss: "",
     webhookUrl: "",
   });
+
+  const [products, setProducts] = useState<Product[]>([
+    { name: "", price: "", description: "" },
+  ]);
+
+  const [payment, setPayment] = useState<PaymentConfig>({
+    cash_on_delivery: false,
+    easypaisa_number: "",
+    jazzcash_number: "",
+    bank_name: "",
+    bank_account: "",
+    bank_account_name: "",
+  });
+
   const [loading, setLoading] = useState(false);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
@@ -58,15 +85,27 @@ export default function CreateAgent() {
   const hasAdvanced = customization === "advanced" || customization === "full";
   const hasFull = customization === "full";
 
+  const addProduct = () => {
+    setProducts([...products, { name: "", price: "", description: "" }]);
+  };
+
+  const removeProduct = (index: number) => {
+    setProducts(products.filter((_, i) => i !== index));
+  };
+
+  const updateProduct = (index: number, field: keyof Product, value: string) => {
+    const updated = [...products];
+    updated[index][field] = value;
+    setProducts(updated);
+  };
+
   const createAgent = async () => {
     if (limitReached) return;
     setLoading(true);
 
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         router.push("/login");
@@ -75,7 +114,7 @@ export default function CreateAgent() {
 
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      // Step 1: Create agent in backend (saves to memory + Supabase)
+      // Step 1: Create agent in backend
       const res = await fetch(`${API}/create-agent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,16 +134,54 @@ export default function CreateAgent() {
 
       const { agent_id } = await res.json();
 
-      // Step 2: Also save to Supabase with user_id for dashboard
+      // Step 2: Save agent to Supabase
       await supabase.from("agents").upsert({
         user_id: user.id,
-        agent_id: agent_id,
+        agent_id,
         name: form.name,
         description: form.description,
         tone: form.tone,
         type: form.type,
         status: "active",
       });
+
+      // Step 3: If Sales bot — save products + payment config
+      if (form.type === "sales") {
+        // Save products (filter empty ones)
+        const validProducts = products.filter((p) => p.name && p.price);
+        if (validProducts.length > 0) {
+          await supabase.from("agent_products").insert(
+            validProducts.map((p) => ({
+              agent_id,
+              user_id: user.id,
+              name: p.name,
+              price: parseFloat(p.price),
+              description: p.description || null,
+              currency: "PKR",
+            }))
+          );
+        }
+
+        // Save payment config
+        const hasAnyPayment =
+          payment.cash_on_delivery ||
+          payment.easypaisa_number ||
+          payment.jazzcash_number ||
+          payment.bank_account;
+
+        if (hasAnyPayment) {
+          await supabase.from("agent_payment_config").upsert({
+            agent_id,
+            user_id: user.id,
+            cash_on_delivery: payment.cash_on_delivery,
+            easypaisa_number: payment.easypaisa_number || null,
+            jazzcash_number: payment.jazzcash_number || null,
+            bank_name: payment.bank_name || null,
+            bank_account: payment.bank_account || null,
+            bank_account_name: payment.bank_account_name || null,
+          });
+        }
+      }
 
       setLoading(false);
       router.push("/dashboard");
@@ -118,7 +195,6 @@ export default function CreateAgent() {
   return (
     <ProtectedRoute>
       <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-12">
-        {/* Background effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
@@ -135,9 +211,7 @@ export default function CreateAgent() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
                 <Bot className="w-5 h-5 text-blue-400" />
               </div>
-              <h1 className="text-2xl font-bold text-white">
-                Create AI Agent
-              </h1>
+              <h1 className="text-2xl font-bold text-white">Create AI Agent</h1>
             </div>
             <p className="text-zinc-400 text-sm">
               Define your agent&apos;s personality and deploy it in seconds.
@@ -160,51 +234,40 @@ export default function CreateAgent() {
                 <div>
                   <p className="text-red-400 font-medium text-sm">Agent limit reached</p>
                   <p className="text-zinc-400 text-sm mt-1">
-                    Your {usage.plan} plan allows {usage.limits.agents} agent{usage.limits.agents === 1 ? "" : "s"}.{" "}
-                    <Link href="/pricing" className="text-blue-400 hover:underline">
-                      Upgrade your plan
-                    </Link>{" "}
-                    to create more.
+                    Your {usage?.plan} plan allows {usage?.limits.agents} agent{usage?.limits.agents === 1 ? "" : "s"}.{" "}
+                    <Link href="/pricing" className="text-blue-400 hover:underline">Upgrade your plan</Link> to create more.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* === BASIC CUSTOMIZATION (All plans) === */}
+            {/* === BASIC SETTINGS === */}
             <div className="space-y-4">
               <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Basic Settings</p>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Agent Name
-                </label>
+                <label className="block text-sm text-zinc-400 mb-1.5">Agent Name</label>
                 <input
                   className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
-                  placeholder="e.g. Support Bot"
+                  placeholder="e.g. My Sales Bot"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Description
-                </label>
+                <label className="block text-sm text-zinc-400 mb-1.5">Description</label>
                 <textarea
                   className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all resize-none"
                   placeholder="What does this agent do?"
                   rows={3}
                   value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Tone
-                </label>
+                <label className="block text-sm text-zinc-400 mb-1.5">Tone</label>
                 <select
                   className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
                   value={form.tone}
@@ -217,9 +280,7 @@ export default function CreateAgent() {
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Chatbot Type
-                </label>
+                <label className="block text-sm text-zinc-400 mb-1.5">Chatbot Type</label>
                 <select
                   className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
                   value={form.type}
@@ -230,12 +291,149 @@ export default function CreateAgent() {
                   <option value="sales" className="bg-zinc-900">💰 Sales Bot</option>
                 </select>
                 <p className="text-zinc-500 text-xs mt-1.5">
-                  {form.type === "sales" && "Captures leads, recommends plans, converts visitors"}
+                  {form.type === "sales" && "Sells products, captures orders, handles payments"}
                   {form.type === "support" && "Handles support tickets and troubleshooting"}
                   {form.type === "general" && "Custom AI assistant for any use case"}
                 </p>
               </div>
             </div>
+
+            {/* === SALES SETTINGS (only when type = sales) === */}
+            {form.type === "sales" && (
+              <>
+                {/* Products */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-emerald-400" />
+                      <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Your Products</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addProduct}
+                      className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Product
+                    </button>
+                  </div>
+
+                  {products.map((product, index) => (
+                    <div key={index} className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-zinc-400 text-xs">Product {index + 1}</span>
+                        {products.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeProduct(index)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">Product Name *</label>
+                          <input
+                            className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-emerald-500/50 transition-all"
+                            placeholder="e.g. T-Shirt"
+                            value={product.name}
+                            onChange={(e) => updateProduct(index, "name", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">Price (PKR) *</label>
+                          <input
+                            type="number"
+                            className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-emerald-500/50 transition-all"
+                            placeholder="e.g. 1500"
+                            value={product.price}
+                            onChange={(e) => updateProduct(index, "price", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1">Description (optional)</label>
+                        <input
+                          className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-emerald-500/50 transition-all"
+                          placeholder="e.g. Cotton, available in all sizes"
+                          value={product.description}
+                          onChange={(e) => updateProduct(index, "description", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Payment Settings */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-yellow-400" />
+                    <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Payment Methods</p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20 space-y-4">
+
+                    {/* Cash on Delivery */}
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={payment.cash_on_delivery}
+                        onChange={(e) => setPayment({ ...payment, cash_on_delivery: e.target.checked })}
+                        className="w-4 h-4 rounded accent-yellow-400"
+                      />
+                      <span className="text-white text-sm">Cash on Delivery (COD)</span>
+                    </label>
+
+                    {/* EasyPaisa */}
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1">EasyPaisa Number (optional)</label>
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="03XX-XXXXXXX"
+                        value={payment.easypaisa_number}
+                        onChange={(e) => setPayment({ ...payment, easypaisa_number: e.target.value })}
+                      />
+                    </div>
+
+                    {/* JazzCash */}
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1">JazzCash Number (optional)</label>
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="03XX-XXXXXXX"
+                        value={payment.jazzcash_number}
+                        onChange={(e) => setPayment({ ...payment, jazzcash_number: e.target.value })}
+                      />
+                    </div>
+
+                    {/* Bank */}
+                    <div className="space-y-2">
+                      <label className="block text-xs text-zinc-500">Bank Transfer (optional)</label>
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Bank Name (e.g. HBL, Meezan)"
+                        value={payment.bank_name}
+                        onChange={(e) => setPayment({ ...payment, bank_name: e.target.value })}
+                      />
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Account Number"
+                        value={payment.bank_account}
+                        onChange={(e) => setPayment({ ...payment, bank_account: e.target.value })}
+                      />
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Account Holder Name"
+                        value={payment.bank_account_name}
+                        onChange={(e) => setPayment({ ...payment, bank_account_name: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* === ADVANCED SETTINGS (Medium + Premium only) === */}
             {hasAdvanced && (
