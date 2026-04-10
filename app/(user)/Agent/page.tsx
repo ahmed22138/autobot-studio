@@ -32,7 +32,9 @@ interface Product {
 interface PaymentConfig {
   cash_on_delivery: boolean;
   easypaisa_number: string;
+  easypaisa_account_name: string;
   jazzcash_number: string;
+  jazzcash_account_name: string;
   bank_name: string;
   bank_account: string;
   bank_account_name: string;
@@ -60,7 +62,9 @@ export default function CreateAgent() {
   const [payment, setPayment] = useState<PaymentConfig>({
     cash_on_delivery: false,
     easypaisa_number: "",
+    easypaisa_account_name: "",
     jazzcash_number: "",
+    jazzcash_account_name: "",
     bank_name: "",
     bank_account: "",
     bank_account_name: "",
@@ -175,7 +179,9 @@ export default function CreateAgent() {
             user_id: user.id,
             cash_on_delivery: payment.cash_on_delivery,
             easypaisa_number: payment.easypaisa_number || null,
+            easypaisa_account_name: payment.easypaisa_account_name || null,
             jazzcash_number: payment.jazzcash_number || null,
+            jazzcash_account_name: payment.jazzcash_account_name || null,
             bank_name: payment.bank_name || null,
             bank_account: payment.bank_account || null,
             bank_account_name: payment.bank_account_name || null,
@@ -387,24 +393,36 @@ export default function CreateAgent() {
                     </label>
 
                     {/* EasyPaisa */}
-                    <div>
-                      <label className="block text-xs text-zinc-500 mb-1">EasyPaisa Number (optional)</label>
+                    <div className="space-y-2">
+                      <label className="block text-xs text-zinc-500">EasyPaisa (optional)</label>
                       <input
                         className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
-                        placeholder="03XX-XXXXXXX"
+                        placeholder="Account Number e.g. 03XX-XXXXXXX"
                         value={payment.easypaisa_number}
                         onChange={(e) => setPayment({ ...payment, easypaisa_number: e.target.value })}
+                      />
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Account Holder Name e.g. Ahmed Ali"
+                        value={payment.easypaisa_account_name}
+                        onChange={(e) => setPayment({ ...payment, easypaisa_account_name: e.target.value })}
                       />
                     </div>
 
                     {/* JazzCash */}
-                    <div>
-                      <label className="block text-xs text-zinc-500 mb-1">JazzCash Number (optional)</label>
+                    <div className="space-y-2">
+                      <label className="block text-xs text-zinc-500">JazzCash (optional)</label>
                       <input
                         className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
-                        placeholder="03XX-XXXXXXX"
+                        placeholder="Account Number e.g. 03XX-XXXXXXX"
                         value={payment.jazzcash_number}
                         onChange={(e) => setPayment({ ...payment, jazzcash_number: e.target.value })}
+                      />
+                      <input
+                        className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Account Holder Name e.g. Ahmed Ali"
+                        value={payment.jazzcash_account_name}
+                        onChange={(e) => setPayment({ ...payment, jazzcash_account_name: e.target.value })}
                       />
                     </div>
 

@@ -360,6 +360,38 @@
     height: 16px;
   }
 
+  #ai-upload-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: #a1a1aa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  #ai-upload-btn:hover {
+    background: rgba(255,255,255,0.12);
+    color: white;
+  }
+
+  #ai-upload-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .ai-screenshot-preview {
+    max-width: 200px;
+    border-radius: 10px;
+    margin-top: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
   #ai-chat-footer {
     text-align: center;
     padding: 6px 0 2px;
@@ -411,6 +443,13 @@
     <div id="ai-chat-input-area">
       <div id="ai-chat-input-wrap">
         <input id="ai-chat-text" placeholder="Type your message..." />
+        <button id="ai-upload-btn" title="Upload payment screenshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </button>
+        <input type="file" id="ai-file-input" accept="image/*" style="display:none" />
         <button id="ai-send-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -427,8 +466,11 @@
   /* ---------- Toggle ---------- */
   const chatInput = box.querySelector("#ai-chat-text");
   const sendBtn = box.querySelector("#ai-send-btn");
+  const uploadBtn = box.querySelector("#ai-upload-btn");
+  const fileInput = box.querySelector("#ai-file-input");
   const messages = box.querySelector("#ai-chat-messages");
   const closeBtn = box.querySelector("#ai-chat-close");
+  let pendingImage = null; // base64 image waiting to be sent
 
   icon.onclick = () => {
     box.style.display = "flex";
@@ -450,7 +492,7 @@
     return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  function addMessage(text, type) {
+  function addMessage(text, type, imgSrc) {
     const row = document.createElement("div");
     row.className = `ai-msg-row ${type}`;
 
@@ -460,7 +502,20 @@
 
     const bubble = document.createElement("div");
     bubble.className = "ai-msg-bubble";
-    bubble.innerText = text;
+    if (imgSrc) {
+      const img = document.createElement("img");
+      img.src = imgSrc;
+      img.className = "ai-screenshot-preview";
+      bubble.appendChild(img);
+      if (text) {
+        const p = document.createElement("p");
+        p.style.marginTop = "6px";
+        p.innerText = text;
+        bubble.appendChild(p);
+      }
+    } else {
+      bubble.innerText = text;
+    }
 
     const time = document.createElement("div");
     time.className = "ai-msg-time";
@@ -483,6 +538,23 @@
     messages.scrollTop = messages.scrollHeight;
     return bubble;
   }
+
+  /* ---------- Image Upload ---------- */
+  uploadBtn.onclick = () => fileInput.click();
+
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingImage = e.target.result; // base64
+      addMessage("📎 Screenshot ready to send", "user", pendingImage);
+      chatInput.placeholder = "Add a message or just send...";
+      chatInput.focus();
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = "";
+  };
 
   function showTyping() {
     const row = document.createElement("div");
@@ -512,19 +584,27 @@
   /* ---------- Send ---------- */
   async function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text) return;
+    if (!text && !pendingImage) return;
 
+    const imageToSend = pendingImage;
+    pendingImage = null;
     chatInput.value = "";
+    chatInput.placeholder = "Type your message...";
     sendBtn.disabled = true;
-    addMessage(text, "user");
+
+    if (text && !imageToSend) addMessage(text, "user");
+    if (text && imageToSend) addMessage(text, "user");
 
     const typing = showTyping();
 
     try {
+      const body = { message: text || "Here is my payment screenshot" };
+      if (imageToSend) body.image = imageToSend;
+
       const res = await fetch(`https://autobot-backend-wowh.onrender.com/chat/${agentId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify(body),
       });
 
       typing.remove();
