@@ -471,6 +471,7 @@
   const messages = box.querySelector("#ai-chat-messages");
   const closeBtn = box.querySelector("#ai-chat-close");
   let pendingImage = null; // base64 image waiting to be sent
+  let conversationHistory = []; // remember full conversation
 
   icon.onclick = () => {
     box.style.display = "flex";
@@ -592,13 +593,19 @@
     chatInput.placeholder = "Type your message...";
     sendBtn.disabled = true;
 
-    if (text && !imageToSend) addMessage(text, "user");
-    if (text && imageToSend) addMessage(text, "user");
+    const userMsg = text || "Here is my payment screenshot";
+    addMessage(userMsg, "user");
+
+    // Add to history
+    conversationHistory.push({ role: "user", content: userMsg });
 
     const typing = showTyping();
 
     try {
-      const body = { message: text || "Here is my payment screenshot" };
+      const body = {
+        message: userMsg,
+        conversation_history: conversationHistory.slice(-20), // last 20 messages
+      };
       if (imageToSend) body.image = imageToSend;
 
       const res = await fetch(`https://autobot-backend-wowh.onrender.com/chat/${agentId}`, {
@@ -620,8 +627,13 @@
       }
 
       const data = await res.json();
+      const reply = data.reply || "Sorry, no response.";
       const botBubble = addMessage("", "bot");
-      typeEffect(botBubble, data.reply || "Sorry, no response.");
+      typeEffect(botBubble, reply);
+
+      // Add bot reply to history
+      conversationHistory.push({ role: "assistant", content: reply });
+
     } catch (e) {
       typing.remove();
       addMessage("⚠️ Connection error. Please try again.", "bot");
