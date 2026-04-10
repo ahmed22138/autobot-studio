@@ -52,47 +52,73 @@ function detectIntent(message: string, conversationHistory: Message[] = []): {
 } {
   const lowerMsg = message.toLowerCase();
 
-  // Check if we're in the middle of support ticket flow
+  // Check if we're in the middle of a flow
   const lastBotMessage = conversationHistory
     .filter((m) => m.role === "assistant")
     .slice(-1)[0]?.content || "";
 
-  // If bot asked for name
+  // ── Sales flow continuation ──────────────────────────────────────────
+  if (
+    lastBotMessage.includes("your name?") &&
+    lastBotMessage.includes("love to help")
+  ) {
+    return { intent: "sales_flow_name", entities: { name: message } };
+  }
+
+  if (
+    lastBotMessage.includes("best email") ||
+    (lastBotMessage.includes("email") && lastBotMessage.includes("reach you"))
+  ) {
+    return { intent: "sales_flow_email", entities: { email: message } };
+  }
+
+  if (
+    lastBotMessage.includes("which plan") &&
+    lastBotMessage.includes("Basic") &&
+    lastBotMessage.includes("Premium")
+  ) {
+    return { intent: "sales_flow_interest", entities: { interest: message } };
+  }
+
+  // ── Support flow continuation ────────────────────────────────────────
   if (lastBotMessage.includes("What is your name") || lastBotMessage.includes("your name?")) {
-    return {
-      intent: "support_flow_name",
-      entities: { name: message },
-    };
+    return { intent: "support_flow_name", entities: { name: message } };
   }
 
-  // If bot asked for email
   if (lastBotMessage.includes("email address") || lastBotMessage.includes("your email?")) {
-    return {
-      intent: "support_flow_email",
-      entities: { email: message },
-    };
+    return { intent: "support_flow_email", entities: { email: message } };
   }
 
-  // If bot asked for plan
   if (lastBotMessage.includes("Which plan") || lastBotMessage.includes("your plan?")) {
-    return {
-      intent: "support_flow_plan",
-      entities: { plan: message },
-    };
+    return { intent: "support_flow_plan", entities: { plan: message } };
   }
 
-  // If bot asked for problem
   if (
     lastBotMessage.includes("describe your problem") ||
     lastBotMessage.includes("What issue")
   ) {
-    return {
-      intent: "support_flow_problem",
-      entities: { problem: message },
-    };
+    return { intent: "support_flow_problem", entities: { problem: message } };
   }
 
-  // Support ticket intent (complete info or request)
+  // ── Sales intent ─────────────────────────────────────────────────────
+  if (
+    lowerMsg.includes("buy") ||
+    lowerMsg.includes("purchase") ||
+    lowerMsg.includes("subscribe") ||
+    lowerMsg.includes("demo") ||
+    lowerMsg.includes("trial") ||
+    lowerMsg.includes("free trial") ||
+    lowerMsg.includes("get started") ||
+    lowerMsg.includes("sign up") ||
+    lowerMsg.includes("interested") ||
+    lowerMsg.includes("start using") ||
+    lowerMsg.includes("i want") ||
+    (lowerMsg.includes("how") && lowerMsg.includes("start"))
+  ) {
+    return { intent: "sales_inquiry", entities: {} };
+  }
+
+  // ── Support ticket ───────────────────────────────────────────────────
   if (
     lowerMsg.includes("support") ||
     lowerMsg.includes("ticket") ||
@@ -195,8 +221,36 @@ function extractSupportInfo(message: string): {
 }
 
 // Generate AI response based on intent
-function generateResponse(intent: string, entities: any, ticketData: any = {}): string {
+function generateResponse(intent: string, entities: any, ticketData: any = {}, salesData: any = {}): string {
   switch (intent) {
+
+    // ── Sales flow ──────────────────────────────────────────────────────
+    case "sales_inquiry":
+      return `🚀 **Great choice! Let's get you started with AutoBot Studio!**\n\nWe'd love to help you build your first AI chatbot.\n\nFirst, may I have **your name?**`;
+
+    case "sales_flow_name":
+      return `Awesome, ${entities.name}! 🎉\n\nWhat's the **best email to reach you?** We'll send your account setup details there.`;
+
+    case "sales_flow_email":
+      return `Perfect! ✅\n\nNow, **which plan interests you?**\n\n🆓 **Basic** — Free · 1 agent · 1,000 msgs/month\n⭐ **Medium** — $29/mo · 5 agents · 10K msgs/month\n👑 **Premium** — $99/mo · Unlimited agents & messages\n\nOr type **"not sure"** and I'll recommend one for you!`;
+
+    case "sales_flow_interest":
+      const interest = entities.interest?.toLowerCase() || "";
+      let recommendation = "";
+      if (interest.includes("not sure") || interest.includes("unsure")) {
+        recommendation = `Based on most of our users, I'd recommend starting with the **Medium plan** — great value with 5 agents and 10K messages/month! You can always upgrade.`;
+      } else if (interest.includes("basic") || interest.includes("free")) {
+        recommendation = `The **Basic plan** is perfect for getting started — completely free!`;
+      } else if (interest.includes("medium")) {
+        recommendation = `The **Medium plan** is our most popular choice — 5 agents and 10K messages for just $29/month!`;
+      } else if (interest.includes("premium")) {
+        recommendation = `The **Premium plan** is perfect for scaling — unlimited everything for $99/month!`;
+      } else {
+        recommendation = `The **${entities.interest}** plan sounds great!`;
+      }
+      return `${recommendation}\n\n✅ **We've saved your details!** Our team will reach out within 24 hours to help you get set up.\n\n🔗 **Ready to start now?** [Sign up here](/signup) — it only takes 2 minutes!\n\nAnything else I can help you with?`;
+
+    // ── Support flow ────────────────────────────────────────────────────
     case "support_flow_name":
       return `Nice to meet you, ${entities.name}! 👋\n\nWhat is your email address?`;
 
@@ -242,7 +296,7 @@ function generateResponse(intent: string, entities: any, ticketData: any = {}): 
 // Main chatbot API
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory = [], ticketData = {} } = await request.json();
+    const { message, conversationHistory = [], ticketData = {}, salesData = {} } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -253,6 +307,7 @@ export async function POST(request: NextRequest) {
 
     // Track ticket data across conversation
     let updatedTicketData = { ...ticketData };
+    let updatedSalesData = { ...salesData };
 
     // Handle support flow states
     if (intent === "support_flow_name") {
@@ -264,12 +319,20 @@ export async function POST(request: NextRequest) {
     } else if (intent === "support_flow_problem") {
       updatedTicketData.problem = entities.problem;
     } else if (intent === "create_support_ticket") {
-      // Merge any detected entities
       updatedTicketData = { ...updatedTicketData, ...entities };
     }
 
+    // Handle sales flow states
+    if (intent === "sales_flow_name") {
+      updatedSalesData.name = entities.name;
+    } else if (intent === "sales_flow_email") {
+      updatedSalesData.email = entities.email;
+    } else if (intent === "sales_flow_interest") {
+      updatedSalesData.interest = entities.interest;
+    }
+
     // Generate response
-    let response = generateResponse(intent, entities, updatedTicketData);
+    let response = generateResponse(intent, entities, updatedTicketData, updatedSalesData);
 
     // Perform actions based on intent
     let action = null;
@@ -331,6 +394,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Save sales lead when interest captured
+    if (intent === "sales_flow_interest" && updatedSalesData.email) {
+      try {
+        const adminSupabase = createAdminClient();
+        await adminSupabase.from("sales_leads").insert({
+          name: updatedSalesData.name || null,
+          email: updatedSalesData.email,
+          plan_interest: updatedSalesData.interest || null,
+          source: "website_chatbot",
+          status: "new",
+        });
+        // Clear sales data after saving
+        updatedSalesData = {};
+      } catch (err) {
+        console.error("Error saving sales lead:", err);
+      }
+    }
+
     // Save conversation to database
     try {
       const supabase = await createClient();
@@ -374,7 +455,8 @@ export async function POST(request: NextRequest) {
       response,
       intent,
       action,
-      ticketData: updatedTicketData, // Return updated ticket data for next message
+      ticketData: updatedTicketData,
+      salesData: updatedSalesData,
     });
   } catch (error: any) {
     console.error("Chatbot error:", error);

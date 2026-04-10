@@ -29,7 +29,8 @@ export default function AutoChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [ticketData, setTicketData] = useState<any>({}); // Track ticket data across conversation
+  const [ticketData, setTicketData] = useState<any>({});
+  const [salesData, setSalesData] = useState<any>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -79,7 +80,8 @@ export default function AutoChatbot() {
         body: JSON.stringify({
           message: input,
           conversationHistory: messages,
-          ticketData: ticketData, // Send current ticket data
+          ticketData: ticketData,
+          salesData: salesData,
         }),
       });
 
@@ -96,10 +98,8 @@ export default function AutoChatbot() {
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Update ticket data from response
-        if (data.ticketData) {
-          setTicketData(data.ticketData);
-        }
+        if (data.ticketData) setTicketData(data.ticketData);
+        if (data.salesData) setSalesData(data.salesData);
       } else {
         throw new Error(data.error || "Failed to get response");
       }
@@ -126,10 +126,10 @@ export default function AutoChatbot() {
 
   // Quick action buttons
   const quickActions = [
-    { label: "Create Agent", message: "How do I create an agent?" },
-    { label: "View Plans", message: "What are your pricing plans?" },
-    { label: "Get Help", message: "I need help with my agent" },
-    { label: "Contact Support", message: "I want to submit a support ticket" },
+    { label: "🚀 Get Started", message: "I want to get started with AutoBot Studio" },
+    { label: "💎 View Plans", message: "What are your pricing plans?" },
+    { label: "🤖 Create Agent", message: "How do I create an agent?" },
+    { label: "🔧 Get Help", message: "I need help with my agent" },
   ];
 
   return (
