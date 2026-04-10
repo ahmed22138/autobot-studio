@@ -237,123 +237,98 @@ export default function CreateAgent() {
               </div>
             </div>
 
-            {/* === ADVANCED CUSTOMIZATION (Medium + Premium) === */}
-            <div className={`space-y-4 ${!hasAdvanced ? "opacity-50" : ""}`}>
-              <div className="flex items-center justify-between">
+            {/* === ADVANCED SETTINGS (Medium + Premium only) === */}
+            {hasAdvanced && (
+              <div className="space-y-4">
                 <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Advanced Settings</p>
-                {!hasAdvanced && (
-                  <Link
-                    href="/pricing"
-                    className="flex items-center gap-1 text-[10px] text-blue-400 hover:underline"
+
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">Welcome Message</label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                    placeholder="Hi! How can I help you today?"
+                    value={form.welcomeMessage}
+                    onChange={(e) => setForm({ ...form, welcomeMessage: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">Response Length</label>
+                  <select
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                    value={form.responseLength}
+                    onChange={(e) => setForm({ ...form, responseLength: e.target.value })}
                   >
-                    <Lock className="w-3 h-3" />
-                    Medium+ Plan
-                    <ArrowUpRight className="w-3 h-3" />
-                  </Link>
-                )}
-              </div>
+                    <option value="short" className="bg-zinc-900">Short</option>
+                    <option value="medium" className="bg-zinc-900">Medium</option>
+                    <option value="long" className="bg-zinc-900">Long</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Welcome Message
-                </label>
-                <input
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all disabled:cursor-not-allowed"
-                  placeholder="Hi! How can I help you today?"
-                  value={form.welcomeMessage}
-                  onChange={(e) => setForm({ ...form, welcomeMessage: e.target.value })}
-                  disabled={!hasAdvanced}
-                />
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">Knowledge Base</label>
+                  <textarea
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all resize-none"
+                    placeholder="Paste custom knowledge or FAQ content for the agent..."
+                    rows={3}
+                    value={form.knowledgeBase}
+                    onChange={(e) => setForm({ ...form, knowledgeBase: e.target.value })}
+                  />
+                </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Response Length
-                </label>
-                <select
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all disabled:cursor-not-allowed"
-                  value={form.responseLength}
-                  onChange={(e) => setForm({ ...form, responseLength: e.target.value })}
-                  disabled={!hasAdvanced}
-                >
-                  <option value="short" className="bg-zinc-900">Short</option>
-                  <option value="medium" className="bg-zinc-900">Medium</option>
-                  <option value="long" className="bg-zinc-900">Long</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Knowledge Base
-                </label>
-                <textarea
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all resize-none disabled:cursor-not-allowed"
-                  placeholder="Paste custom knowledge or FAQ content for the agent..."
-                  rows={3}
-                  value={form.knowledgeBase}
-                  onChange={(e) => setForm({ ...form, knowledgeBase: e.target.value })}
-                  disabled={!hasAdvanced}
-                />
-              </div>
-            </div>
-
-            {/* === FULL CUSTOMIZATION (Premium only) === */}
-            <div className={`space-y-4 ${!hasFull ? "opacity-50" : ""}`}>
-              <div className="flex items-center justify-between">
+            {/* === PREMIUM SETTINGS (Premium only) === */}
+            {hasFull && (
+              <div className="space-y-4">
                 <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Premium Settings</p>
-                {!hasFull && (
-                  <Link
-                    href="/pricing"
-                    className="flex items-center gap-1 text-[10px] text-purple-400 hover:underline"
-                  >
-                    <Lock className="w-3 h-3" />
-                    Premium Plan
-                    <ArrowUpRight className="w-3 h-3" />
-                  </Link>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  System Prompt
-                </label>
-                <textarea
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none disabled:cursor-not-allowed"
-                  placeholder="You are a helpful assistant for..."
-                  rows={3}
-                  value={form.systemPrompt}
-                  onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
-                  disabled={!hasFull}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">System Prompt</label>
+                  <textarea
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none"
+                    placeholder="You are a helpful assistant for..."
+                    rows={3}
+                    value={form.systemPrompt}
+                    onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Custom CSS
-                </label>
-                <textarea
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none font-mono text-sm disabled:cursor-not-allowed"
-                  placeholder=".chatbot-widget { border-radius: 16px; }"
-                  rows={3}
-                  value={form.customCss}
-                  onChange={(e) => setForm({ ...form, customCss: e.target.value })}
-                  disabled={!hasFull}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">Custom CSS</label>
+                  <textarea
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none font-mono text-sm"
+                    placeholder=".chatbot-widget { border-radius: 16px; }"
+                    rows={3}
+                    value={form.customCss}
+                    onChange={(e) => setForm({ ...form, customCss: e.target.value })}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1.5">
-                  Webhook URL
-                </label>
-                <input
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all disabled:cursor-not-allowed"
-                  placeholder="https://your-server.com/webhook"
-                  value={form.webhookUrl}
-                  onChange={(e) => setForm({ ...form, webhookUrl: e.target.value })}
-                  disabled={!hasFull}
-                />
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">Webhook URL</label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                    placeholder="https://your-server.com/webhook"
+                    value={form.webhookUrl}
+                    onChange={(e) => setForm({ ...form, webhookUrl: e.target.value })}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Upgrade hint for Basic users */}
+            {!hasAdvanced && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/8">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-zinc-500" />
+                  <span className="text-zinc-500 text-sm">More options available on higher plans</span>
+                </div>
+                <Link href="/pricing" className="flex items-center gap-1 text-xs text-blue-400 hover:underline">
+                  Upgrade <ArrowUpRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
 
             <button
               onClick={createAgent}
