@@ -83,6 +83,7 @@ export default function CreateAgent() {
           name: form.name,
           description: form.description,
           tone: form.tone,
+          type: form.type,
         }),
       });
 
