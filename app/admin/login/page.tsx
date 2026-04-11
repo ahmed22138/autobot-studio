@@ -14,9 +14,6 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Admin emails - Only these can access
-  const ADMIN_EMAILS = ["workb9382@gmail.com"];
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -24,13 +21,6 @@ export default function AdminLoginPage() {
 
     try {
       const supabase = createClient();
-
-      // Check if email is admin
-      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
-        setError("Unauthorized: Not an admin email");
-        setLoading(false);
-        return;
-      }
 
       // Login with Supabase
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
