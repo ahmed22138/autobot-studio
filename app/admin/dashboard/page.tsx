@@ -36,6 +36,8 @@ interface DashboardStats {
   basicPlanUsers: number;
   mediumPlanUsers: number;
   premiumPlanUsers: number;
+  pendingPayments: number;
+  totalRevenuePKR: number;
 }
 
 export default function AdminDashboard() {
@@ -54,6 +56,8 @@ export default function AdminDashboard() {
     basicPlanUsers: 0,
     mediumPlanUsers: 0,
     premiumPlanUsers: 0,
+    pendingPayments: 0,
+    totalRevenuePKR: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -110,6 +114,13 @@ export default function AdminDashboard() {
         subscriptions?.filter((s) => s.plan === "medium").length || 0;
       const premiumPlanUsers =
         subscriptions?.filter((s) => s.plan === "premium").length || 0;
+      const totalRevenuePKR = mediumPlanUsers * 15000 + premiumPlanUsers * 60000;
+
+      // Pending payment requests
+      const { count: pendingPayments } = await supabase
+        .from("payment_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
 
       // Recent activity (last 5 tickets)
       const { data: recentTickets } = await supabase
@@ -122,7 +133,7 @@ export default function AdminDashboard() {
 
       setStats({
         totalUsers: uniqueUsers.size,
-        activeUsers: uniqueUsers.size, // Simplified
+        activeUsers: uniqueUsers.size,
         inactiveUsers: 0,
         totalAgents,
         activeAgents,
@@ -135,6 +146,8 @@ export default function AdminDashboard() {
         basicPlanUsers,
         mediumPlanUsers,
         premiumPlanUsers,
+        pendingPayments: pendingPayments || 0,
+        totalRevenuePKR,
       });
 
       setLoading(false);
@@ -176,8 +189,8 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: "Revenue Stats",
-      value: `$${(stats.mediumPlanUsers * 8 + stats.premiumPlanUsers * 15).toFixed(0)}`,
+      title: "Monthly Revenue",
+      value: `PKR ${stats.totalRevenuePKR.toLocaleString()}`,
       icon: DollarSign,
       color: "green",
       subStats: [
@@ -307,23 +320,22 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-          <h3 className="text-blue-400 text-sm font-medium mb-2">
-            Medium Plan
-          </h3>
-          <p className="text-4xl font-bold text-white mb-2">
-            {stats.mediumPlanUsers}
-          </p>
-          <p className="text-zinc-500 text-sm">$8/month subscribers</p>
+          <h3 className="text-blue-400 text-sm font-medium mb-2">Medium Plan</h3>
+          <p className="text-4xl font-bold text-white mb-2">{stats.mediumPlanUsers}</p>
+          <p className="text-zinc-500 text-sm">PKR 15,000/mo subscribers</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-          <h3 className="text-amber-400 text-sm font-medium mb-2">
-            Premium Plan
-          </h3>
-          <p className="text-4xl font-bold text-white mb-2">
-            {stats.premiumPlanUsers}
-          </p>
-          <p className="text-zinc-500 text-sm">$15/month subscribers</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-amber-400 text-sm font-medium">Premium Plan</h3>
+            {stats.pendingPayments > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">
+                {stats.pendingPayments} pending
+              </span>
+            )}
+          </div>
+          <p className="text-4xl font-bold text-white mb-2">{stats.premiumPlanUsers}</p>
+          <p className="text-zinc-500 text-sm">PKR 60,000/mo subscribers</p>
         </div>
       </motion.div>
 

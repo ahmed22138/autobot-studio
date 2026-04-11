@@ -15,8 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Admin emails
-    const ADMIN_EMAILS = ["workb9382@gmail.com", "dj9581907@gmail.com"];
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
     if (!ADMIN_EMAILS.includes(user.email?.toLowerCase() || "")) {
       return NextResponse.json({ error: "Forbidden - Admin only" }, { status: 403 });
     }

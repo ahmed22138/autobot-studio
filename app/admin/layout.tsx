@@ -16,6 +16,7 @@ import {
   X,
   Shield,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -31,11 +32,7 @@ export default function AdminLayout({
   const [adminName, setAdminName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Admin emails - Only these can access admin panel
-  const ADMIN_EMAILS = [
-    "workb9382@gmail.com",
-    "dj9581907@gmail.com"
-  ];
+  const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
 
   useEffect(() => {
     checkAdminAccess();
@@ -121,6 +118,11 @@ export default function AdminLayout({
       name: "Chatbot",
       href: "/admin/chatbot",
       icon: MessageCircle,
+    },
+    {
+      name: "Payments",
+      href: "/admin/payments",
+      icon: CreditCard,
     },
     {
       name: "Analytics",
