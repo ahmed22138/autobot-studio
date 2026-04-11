@@ -25,6 +25,7 @@ import {
   Lock,
   Headphones,
   Ticket,
+  ShoppingBag,
 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { createClient } from "@/lib/supabase/client";
@@ -153,10 +154,18 @@ export default function DashboardPage() {
   const featureCards = usage
     ? [
         {
+          name: "Orders",
+          icon: ShoppingBag,
+          color: "emerald",
+          unlocked: true,
+          href: "/dashboard/orders",
+          requiredPlan: "All Plans",
+        },
+        {
           name: isAdmin ? "Manage Tickets (Admin)" : "My Support Tickets",
           icon: Ticket,
           color: "cyan",
-          unlocked: true, // Available for all plans
+          unlocked: true,
           href: isAdmin ? "/dashboard/tickets" : "/dashboard/my-tickets",
           requiredPlan: "All Plans",
         },
