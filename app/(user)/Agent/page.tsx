@@ -146,6 +146,7 @@ export default function CreateAgent() {
         description: form.description,
         tone: form.tone,
         type: form.type,
+        knowledge_base: form.type === "general" ? (form.knowledgeBase || null) : null,
         status: "active",
       });
 
@@ -299,9 +300,28 @@ export default function CreateAgent() {
                 <p className="text-zinc-500 text-xs mt-1.5">
                   {form.type === "sales" && "Sells products, captures orders, handles payments"}
                   {form.type === "support" && "Handles support tickets and troubleshooting"}
-                  {form.type === "general" && "Custom AI assistant for any use case"}
+                  {form.type === "general" && "Answers questions from your book, document, or FAQ"}
                 </p>
               </div>
+
+              {/* === GENERAL BOT: Knowledge Base === */}
+              {form.type === "general" && (
+                <div>
+                  <label className="block text-sm text-zinc-400 mb-1.5">
+                    📚 Knowledge Base
+                  </label>
+                  <textarea
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all resize-none"
+                    placeholder={`Paste your book, document, FAQ, or any content here...\n\nExample:\nChapter 1: Introduction\nThis book is about...\n\nQ: How to use this product?\nA: First, open the app...`}
+                    rows={8}
+                    value={form.knowledgeBase}
+                    onChange={(e) => setForm({ ...form, knowledgeBase: e.target.value })}
+                  />
+                  <p className="text-zinc-500 text-xs mt-1.5">
+                    Bot will answer questions <strong className="text-zinc-400">only</strong> from this content
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* === SALES SETTINGS (only when type = sales) === */}
