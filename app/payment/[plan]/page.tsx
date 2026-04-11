@@ -7,8 +7,8 @@ import { Copy, Check, Upload, Loader2, CheckCircle, ArrowLeft, Smartphone, Build
 import { createClient } from "@/lib/supabase/client";
 
 const PLAN_INFO: Record<string, { label: string; pricePKR: number; color: string }> = {
-  medium:  { label: "Medium",  pricePKR: 2500, color: "blue"   },
-  premium: { label: "Premium", pricePKR: 4500, color: "purple" },
+  medium:  { label: "Medium",  pricePKR: 15000, color: "blue"   },
+  premium: { label: "Premium", pricePKR: 60000, color: "purple" },
 };
 
 // Payment details — set these in Vercel env vars
