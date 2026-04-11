@@ -146,7 +146,11 @@ export default function CreateAgent() {
         description: form.description,
         tone: form.tone,
         type: form.type,
-        knowledge_base: form.type === "general" ? (form.knowledgeBase || null) : null,
+        knowledge_base: form.knowledgeBase || null,
+        welcome_message: form.welcomeMessage || null,
+        system_prompt: form.systemPrompt || null,
+        response_length: form.responseLength || "medium",
+        webhook_url: form.webhookUrl || null,
         status: "active",
       });
 

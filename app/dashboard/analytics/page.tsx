@@ -67,17 +67,25 @@ function AnalyticsContent() {
     }
     setWeekData(days);
 
-    // Per-agent message count
+    // Per-agent message count — single query, no N+1
     if (agentsData.data?.length) {
-      const stats: AgentStat[] = await Promise.all(
-        agentsData.data.map(async (agent) => {
-          const { count } = await supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("agent_id", agent.agent_id);
-          return { name: agent.name, count: count || 0, type: agent.type || "general", status: agent.status };
-        })
-      );
+      const agentIds = agentsData.data.map(a => a.agent_id);
+      const { data: allAgentMsgs } = await supabase
+        .from("messages")
+        .select("agent_id")
+        .in("agent_id", agentIds);
+
+      const countMap: Record<string, number> = {};
+      allAgentMsgs?.forEach(m => {
+        countMap[m.agent_id] = (countMap[m.agent_id] || 0) + 1;
+      });
+
+      const stats: AgentStat[] = agentsData.data.map(agent => ({
+        name: agent.name,
+        count: countMap[agent.agent_id] || 0,
+        type: agent.type || "general",
+        status: agent.status,
+      }));
       setAgentStats(stats.sort((a, b) => b.count - a.count));
     }
 

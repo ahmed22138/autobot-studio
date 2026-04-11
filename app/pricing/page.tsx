@@ -10,8 +10,10 @@ import type { User } from "@supabase/supabase-js";
 
 const plans = [
   {
-    name: "Basic",
+    name: "basic",
+    label: "Basic",
     price: "Free",
+    pricePKR: null,
     period: "",
     description: "Perfect for getting started with AI agents",
     icon: Zap,
@@ -26,13 +28,14 @@ const plans = [
       { text: "White-label", included: false },
       { text: "Custom Integrations", included: false },
     ],
-    cta: "Get Started",
+    cta: "Get Started Free",
     popular: false,
-    priceId: null,
   },
   {
-    name: "Medium",
-    price: "$8",
+    name: "medium",
+    label: "Medium",
+    price: "PKR 2,500",
+    pricePKR: 2500,
     period: "/mo",
     description: "For growing businesses that need more power",
     icon: Star,
@@ -47,13 +50,14 @@ const plans = [
       { text: "White-label", included: false },
       { text: "Custom Integrations", included: false },
     ],
-    cta: "Subscribe",
+    cta: "Subscribe — PKR 2,500/mo",
     popular: true,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_MEDIUM_PRICE_ID,
   },
   {
-    name: "Premium",
-    price: "$15",
+    name: "premium",
+    label: "Premium",
+    price: "PKR 4,500",
+    pricePKR: 4500,
     period: "/mo",
     description: "Unlimited power for enterprise needs",
     icon: Crown,
@@ -68,59 +72,31 @@ const plans = [
       { text: "White-label", included: true },
       { text: "Custom Integrations", included: true },
     ],
-    cta: "Subscribe",
+    cta: "Subscribe — PKR 4,500/mo",
     popular: false,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID,
   },
 ];
 
 export default function PricingPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [loadingPlan] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
   }, []);
 
-  const handleSubscribe = async (priceId: string | null | undefined) => {
-    if (!priceId) {
-      // Basic plan — go to signup or dashboard
-      if (user) {
-        router.push("/dashboard");
-      } else {
-        router.push("/signup");
-      }
+  const handleSubscribe = (planName: string, pricePKR: number | null) => {
+    if (!pricePKR) {
+      router.push(user ? "/dashboard" : "/signup");
       return;
     }
-
     if (!user) {
       router.push(`/login?redirect=/pricing`);
       return;
     }
-
-    setLoadingPlan(priceId);
-
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Checkout error:", data.error);
-        setLoadingPlan(null);
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      setLoadingPlan(null);
-    }
+    router.push(`/payment/${planName}`);
   };
 
   return (
@@ -156,7 +132,7 @@ export default function PricingPage() {
           {plans.map((plan, index) => {
             const Icon = plan.icon;
             const isPopular = plan.popular;
-            const isLoading = loadingPlan === plan.priceId;
+            const isLoading = loadingPlan === plan.name;
 
             return (
               <motion.div
@@ -250,7 +226,7 @@ export default function PricingPage() {
 
                   {/* CTA Button */}
                   <button
-                    onClick={() => handleSubscribe(plan.priceId)}
+                    onClick={() => handleSubscribe(plan.name, plan.pricePKR)}
                     disabled={isLoading}
                     className={`w-full py-3 px-6 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                       isPopular
@@ -282,7 +258,7 @@ export default function PricingPage() {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="text-center text-zinc-600 text-sm mt-12"
         >
-          All paid plans include a 14-day free trial. Cancel anytime.
+          JazzCash • EasyPaisa • Bank Transfer — Monthly subscription. Cancel anytime.
         </motion.p>
       </div>
     </main>

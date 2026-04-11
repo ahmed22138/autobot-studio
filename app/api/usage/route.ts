@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS, PlanName } from "@/lib/plan-limits";
 
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
+
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -40,10 +42,13 @@ export async function GET() {
 
   const limits = PLAN_LIMITS[plan];
 
+  const isAdmin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes((user.email || "").toLowerCase());
+
   return NextResponse.json({
     plan,
     agentCount: agentCount ?? 0,
     messageCount: messageCount ?? 0,
+    isAdmin,
     limits: {
       agents: limits.agents === Infinity ? null : limits.agents,
       messages: limits.messages === Infinity ? null : limits.messages,

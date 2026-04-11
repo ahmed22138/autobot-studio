@@ -26,6 +26,7 @@ import {
   Headphones,
   Ticket,
   ShoppingBag,
+  ShieldCheck,
 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { createClient } from "@/lib/supabase/client";
@@ -44,6 +45,7 @@ interface UsageData {
   plan: string;
   agentCount: number;
   messageCount: number;
+  isAdmin?: boolean;
   limits: { agents: number | null; messages: number | null };
   features: {
     customization: string;
@@ -63,12 +65,8 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  // Admin emails
-  const ADMIN_EMAILS = [
-    "workb9382@gmail.com",
-    "dj9581907@gmail.com"
-  ];
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,8 +83,6 @@ export default function DashboardPage() {
         const name = user.user_metadata?.name || user.user_metadata?.full_name || userEmail.split('@')[0];
         setUserName(name);
 
-        setIsAdmin(ADMIN_EMAILS.includes(userEmail.toLowerCase()));
-
         const { data } = await supabase
           .from("agents")
           .select("*")
@@ -102,7 +98,10 @@ export default function DashboardPage() {
 
     fetch("/api/usage")
       .then((res) => res.json())
-      .then((data) => setUsage(data))
+      .then((data) => {
+        setUsage(data);
+        if (data?.isAdmin) setIsAdmin(true);
+      })
       .catch(() => {});
   }, []);
 
@@ -116,18 +115,23 @@ export default function DashboardPage() {
   };
 
   const toggleStatus = async (id: string, currentStatus: string) => {
+    setTogglingId(id);
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     const supabase = createClient();
     await supabase.from("agents").update({ status: newStatus }).eq("id", id);
     setAgents((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
     );
+    setTogglingId(null);
   };
 
-  const deleteAgent = async (id: string) => {
+  const deleteAgent = async (id: string, name: string) => {
+    if (!confirm(`Delete agent "${name}"?\n\nThis will permanently remove the agent and cannot be undone.`)) return;
+    setDeletingId(id);
     const supabase = createClient();
     await supabase.from("agents").delete().eq("id", id);
     setAgents((prev) => prev.filter((a) => a.id !== id));
+    setDeletingId(null);
   };
 
   const totalAgents = agents.length;
@@ -201,6 +205,14 @@ export default function DashboardPage() {
           href: "/dashboard/integrations",
           requiredPlan: "Premium",
         },
+        ...(isAdmin ? [{
+          name: "Payment Requests",
+          icon: ShieldCheck,
+          color: "cyan",
+          unlocked: true,
+          href: "/dashboard/admin/payments",
+          requiredPlan: "Admin Only",
+        }] : []),
       ]
     : [];
 
@@ -584,13 +596,16 @@ export default function DashboardPage() {
                       </Link>
                       <button
                         onClick={() => toggleStatus(agent.id, agent.status)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        disabled={togglingId === agent.id}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all disabled:opacity-50 ${
                           agent.status === "active"
                             ? "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400"
                             : "bg-green-500/10 hover:bg-green-500/20 text-green-400"
                         }`}
                       >
-                        {agent.status === "active" ? (
+                        {togglingId === agent.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : agent.status === "active" ? (
                           <>
                             <PowerOff className="w-3.5 h-3.5" />
                             Deactivate
@@ -603,10 +618,15 @@ export default function DashboardPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => deleteAgent(agent.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm transition-all ml-auto"
+                        onClick={() => deleteAgent(agent.id, agent.name)}
+                        disabled={deletingId === agent.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm transition-all ml-auto disabled:opacity-50"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {deletingId === agent.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
                         Delete
                       </button>
                     </div>

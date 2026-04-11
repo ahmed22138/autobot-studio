@@ -470,15 +470,54 @@
   const fileInput = box.querySelector("#ai-file-input");
   const messages = box.querySelector("#ai-chat-messages");
   const closeBtn = box.querySelector("#ai-chat-close");
-  let pendingImage = null; // base64 image waiting to be sent
-  let conversationHistory = []; // remember full conversation
+  const titleEl = box.querySelector("#ai-chat-title");
+  const BACKEND = "https://autobot-backend-wowh.onrender.com";
+  let pendingImage = null;
+  let conversationHistory = [];
+  let agentConfig = { name: "AI Assistant", welcome_message: "", type: "general" };
+
+  // Restore history from localStorage
+  const storageKey = `ai_chat_${agentId}`;
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      conversationHistory = parsed.history || [];
+      if (parsed.messages && parsed.messages.length > 0) {
+        parsed.messages.forEach(m => {
+          addMessage(m.text, m.type, m.img || null);
+        });
+      }
+    }
+  } catch(e) {}
+
+  let savedMessages = [];
+  function saveToStorage() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        history: conversationHistory.slice(-40),
+        messages: savedMessages.slice(-40),
+      }));
+    } catch(e) {}
+  }
+
+  // Fetch agent config (name + welcome message)
+  fetch(`${BACKEND}/agent/${agentId}/config`)
+    .then(r => r.ok ? r.json() : null)
+    .then(cfg => {
+      if (!cfg) return;
+      agentConfig = cfg;
+      if (titleEl) titleEl.innerText = cfg.name;
+    })
+    .catch(() => {});
 
   icon.onclick = () => {
     box.style.display = "flex";
     icon.style.display = "none";
     chatInput.focus();
-    if (messages.children.length === 0) {
-      addMessage("👋 Hi! How can I help you today?", "bot");
+    if (messages.children.length === 0 && conversationHistory.length === 0) {
+      const welcome = agentConfig.welcome_message || "👋 Hi! How can I help you today?";
+      addMessage(welcome, "bot");
     }
   };
 
@@ -546,6 +585,21 @@
   fileInput.onchange = () => {
     const file = fileInput.files[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      addMessage("⚠️ Please upload an image file only.", "bot");
+      fileInput.value = "";
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      addMessage("⚠️ Image too large. Please upload an image under 5MB.", "bot");
+      fileInput.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       pendingImage = e.target.result; // base64
@@ -595,6 +649,7 @@
 
     const userMsg = text || "Here is my payment screenshot";
     addMessage(userMsg, "user");
+    savedMessages.push({ text: userMsg, type: "user" });
 
     // Add to history
     conversationHistory.push({ role: "user", content: userMsg });
@@ -604,11 +659,11 @@
     try {
       const body = {
         message: userMsg,
-        conversation_history: conversationHistory.slice(-20), // last 20 messages
+        conversation_history: conversationHistory.slice(-20),
       };
       if (imageToSend) body.image = imageToSend;
 
-      const res = await fetch(`https://autobot-backend-wowh.onrender.com/chat/${agentId}`, {
+      const res = await fetch(`${BACKEND}/chat/${agentId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -636,8 +691,10 @@
       const botBubble = addMessage("", "bot");
       typeEffect(botBubble, reply);
 
-      // Add bot reply to history
+      // Add bot reply to history + save
       conversationHistory.push({ role: "assistant", content: reply });
+      savedMessages.push({ text: reply, type: "bot" });
+      saveToStorage();
 
     } catch (e) {
       typing.remove();
