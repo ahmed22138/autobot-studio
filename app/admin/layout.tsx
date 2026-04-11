@@ -32,7 +32,7 @@ export default function AdminLayout({
   const [adminName, setAdminName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
+  const ADMIN_EMAILS = ["dj9581907@gmail.com", "workb9382@gmail.com"];
 
   useEffect(() => {
     checkAdminAccess();

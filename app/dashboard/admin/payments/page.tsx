@@ -19,7 +19,7 @@ interface PaymentRequest {
   created_at: string;
 }
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
+const ADMIN_EMAILS = ["dj9581907@gmail.com", "workb9382@gmail.com"];
 
 export default function AdminPaymentsPage() {
   const router = useRouter();

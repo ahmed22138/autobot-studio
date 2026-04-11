@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS, PlanName } from "@/lib/plan-limits";
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
+const ADMIN_EMAILS = ["dj9581907@gmail.com", "workb9382@gmail.com"];
 
 export async function GET() {
   const supabase = await createClient();

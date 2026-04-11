@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   // Send email notification to admin
   const resendKey = process.env.RESEND_API_KEY;
-  const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0];
+  const adminEmail = "dj9581907@gmail.com";
   if (resendKey && adminEmail) {
     try {
       await fetch("https://api.resend.com/emails", {

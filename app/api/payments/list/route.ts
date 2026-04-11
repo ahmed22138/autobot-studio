@@ -7,7 +7,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").filter(Boolean);
+  const adminEmails = ["dj9581907@gmail.com", "workb9382@gmail.com"];
   if (!adminEmails.includes((user.email || "").toLowerCase())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
