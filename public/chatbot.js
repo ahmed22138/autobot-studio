@@ -621,6 +621,11 @@
         return;
       }
 
+      if (res.status === 429) {
+        addMessage("⚠️ This chatbot has reached its monthly message limit. Please try again next month.", "bot");
+        return;
+      }
+
       if (!res.ok) {
         addMessage("⚠️ Sorry, could not connect. Please try again.", "bot");
         return;
