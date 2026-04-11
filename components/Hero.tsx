@@ -16,52 +16,28 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden aurora-bg dot-grid">
 
-      {/* ── Animated aurora orbs ── */}
+      {/* ── Aurora orbs — CSS animations (GPU thread, no INP impact) ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* top-left violet */}
-        <motion.div
-          animate={{ x: [0, 30, 0], y: [0, -25, 0], scale: [1, 1.12, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-24 -left-24 w-[700px] h-[700px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.22) 0%, transparent 70%)", filter: "blur(60px)" }}
-        />
-        {/* right blue */}
-        <motion.div
-          animate={{ x: [0, -25, 0], y: [0, 30, 0], scale: [1, 1.08, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.16) 0%, transparent 70%)", filter: "blur(70px)" }}
-        />
-        {/* bottom cyan */}
-        <motion.div
-          animate={{ x: [0, 20, 0], y: [0, -20, 0], scale: [1, 1.15, 1] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", filter: "blur(80px)" }}
-        />
-        {/* center faint */}
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%)", filter: "blur(90px)" }}
-        />
+        <div className="absolute -top-24 -left-24 w-[700px] h-[700px] rounded-full hero-orb-1"
+          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.22) 0%, transparent 70%)", filter: "blur(60px)", willChange: "transform" }} />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full hero-orb-2"
+          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.16) 0%, transparent 70%)", filter: "blur(70px)", willChange: "transform" }} />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full hero-orb-3"
+          style={{ background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", filter: "blur(80px)", willChange: "transform" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full hero-orb-pulse"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%)", filter: "blur(90px)", willChange: "transform, opacity" }} />
 
-        {/* Floating sparkle dots */}
+        {/* Sparkle dots — CSS animations */}
         {[
-          { x: "18%", y: "22%", d: 0 },
-          { x: "75%", y: "15%", d: 1.2 },
-          { x: "88%", y: "60%", d: 0.5 },
-          { x: "10%", y: "70%", d: 2 },
-          { x: "50%", y: "85%", d: 0.8 },
-          { x: "35%", y: "12%", d: 1.5 },
+          { x: "18%", y: "22%", delay: "0s",    dur: "3s"   },
+          { x: "75%", y: "15%", delay: "1.2s",  dur: "3.5s" },
+          { x: "88%", y: "60%", delay: "0.5s",  dur: "3.2s" },
+          { x: "10%", y: "70%", delay: "2s",    dur: "4s"   },
+          { x: "50%", y: "85%", delay: "0.8s",  dur: "3.8s" },
+          { x: "35%", y: "12%", delay: "1.5s",  dur: "3.3s" },
         ].map((p, i) => (
-          <motion.div key={i}
-            animate={{ y: [0, -12, 0], opacity: [0.25, 0.7, 0.25] }}
-            transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: p.d, ease: "easeInOut" }}
-            className="absolute w-1 h-1 rounded-full bg-violet-400/50"
-            style={{ left: p.x, top: p.y }}
-          />
+          <div key={i} className="absolute w-1 h-1 rounded-full bg-violet-400/50 hero-sparkle"
+            style={{ left: p.x, top: p.y, animationDelay: p.delay, animationDuration: p.dur, willChange: "transform, opacity" }} />
         ))}
       </div>
 
@@ -136,9 +112,7 @@ export default function Hero() {
                 className="aurora-btn shimmer group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white font-semibold text-[15px]">
                 <Zap className="w-4 h-4" />
                 Get Started — It&apos;s Free
-                <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                  <ArrowRight className="w-4 h-4" />
-                </motion.span>
+                <ArrowRight className="w-4 h-4 hero-arrow-slide" />
               </Link>
               <a href="#features"
                 className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl glass-2 text-white/60 hover:text-white/90 font-medium text-[15px] transition-all duration-300 hover:border-white/15">
@@ -267,10 +241,9 @@ export default function Hero() {
                     </div>
                     <div className="flex gap-1 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/[0.05]">
                       {[0,1,2].map(i => (
-                        <motion.span key={i}
-                          animate={{ y: [0, -4, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-                          className="w-1.5 h-1.5 rounded-full bg-white/30"
+                        <span key={i}
+                          className="w-1.5 h-1.5 rounded-full bg-white/30 hero-typing-dot"
+                          style={{ animationDelay: `${i * 0.15}s`, willChange: "transform" }}
                         />
                       ))}
                     </div>
