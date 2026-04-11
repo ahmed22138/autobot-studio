@@ -205,11 +205,12 @@ export default function DashboardPage() {
     : [];
 
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-    cyan: { bg: "bg-cyan-500/20", text: "text-cyan-400", border: "border-cyan-500/20" },
-    blue: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/20" },
-    amber: { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/20" },
-    purple: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/20" },
-    green: { bg: "bg-green-500/20", text: "text-green-400", border: "border-green-500/20" },
+    cyan:    { bg: "bg-cyan-500/20",    text: "text-cyan-400",    border: "border-cyan-500/20" },
+    blue:    { bg: "bg-blue-500/20",    text: "text-blue-400",    border: "border-blue-500/20" },
+    amber:   { bg: "bg-amber-500/20",   text: "text-amber-400",   border: "border-amber-500/20" },
+    purple:  { bg: "bg-purple-500/20",  text: "text-purple-400",  border: "border-purple-500/20" },
+    green:   { bg: "bg-green-500/20",   text: "text-green-400",   border: "border-green-500/20" },
+    emerald: { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/20" },
   };
 
   return (
