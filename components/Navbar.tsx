@@ -37,11 +37,13 @@ export default function Navbar() {
     ? [
         { href: "#features",    label: "Features",    anchor: true },
         { href: "#how-it-works",label: "How It Works",anchor: true },
+        { href: "/docs",        label: "Docs",        anchor: false },
         { href: "/pricing",     label: "Pricing",     anchor: false },
         { href: "/support",     label: "Support",     anchor: false },
       ]
     : [
         { href: "/dashboard",   label: "Dashboard",   anchor: false },
+        { href: "/docs",        label: "Docs",        anchor: false },
         { href: "/pricing",     label: "Pricing",     anchor: false },
         { href: "/support",     label: "Support",     anchor: false },
       ];
