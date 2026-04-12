@@ -55,7 +55,13 @@ export default function AdminTicketsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
-  const [sending, setSending] = useState(false);
+  const [sending, setSending]   = useState(false);
+  const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null);
+
+  const showToast = (msg: string, ok: boolean) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     fetchTickets();
@@ -152,10 +158,10 @@ export default function AdminTicketsPage() {
       // For now, just refresh
       setReplyMessage("");
       await fetchTickets();
-      alert("✅ Reply sent to customer!");
+      showToast("Reply sent to customer!", true);
     } catch (error) {
       console.error("Failed to send reply:", error);
-      alert("❌ Failed to send reply");
+      showToast("Failed to send reply", false);
     } finally {
       setSending(false);
     }
@@ -216,6 +222,15 @@ export default function AdminTicketsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2 ${
+          toast.ok ? "bg-green-500/90 text-white" : "bg-red-500/90 text-white"
+        }`}>
+          {toast.ok ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

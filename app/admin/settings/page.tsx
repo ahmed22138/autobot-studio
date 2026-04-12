@@ -1,98 +1,43 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Settings, Shield, Bell, Database, Mail, Key } from "lucide-react";
+import { Settings, Shield, Database, Mail, Key, CheckCircle } from "lucide-react";
+
+const ADMIN_EMAILS = ["dj9581907@gmail.com", "workb9382@gmail.com"];
 
 export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <Settings className="w-8 h-8 text-zinc-400" />
           Settings
         </h1>
-        <p className="text-zinc-400">
-          Configure admin panel preferences and security
-        </p>
+        <p className="text-zinc-400">Admin panel configuration and info</p>
       </motion.div>
 
-      {/* Settings Sections */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="space-y-6"
-      >
-        {/* Security */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="space-y-6">
+
+        {/* Admin Access */}
         <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-6 h-6 text-amber-400" />
-            <h2 className="text-xl font-semibold text-white">Security</h2>
+            <h2 className="text-xl font-semibold text-white">Admin Access</h2>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">
-                Admin Email
-              </label>
-              <input
-                type="email"
-                value="workb9382@gmail.com"
-                disabled
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed"
-              />
-              <p className="text-xs text-zinc-500 mt-1">
-                Contact developer to change admin email
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
-          <div className="flex items-center gap-3 mb-4">
-            <Bell className="w-6 h-6 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">Notifications</h2>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <p className="text-white font-medium">New User Signups</p>
-                <p className="text-xs text-zinc-500">
-                  Get notified when new users register
-                </p>
+          <p className="text-zinc-500 text-sm mb-4">
+            Only these emails can access the admin panel. To change, update the code in <code className="text-zinc-400 bg-white/5 px-1.5 py-0.5 rounded">app/admin/layout.tsx</code>
+          </p>
+          <div className="space-y-2">
+            {ADMIN_EMAILS.map(email => (
+              <div key={email} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                <span className="text-white font-mono text-sm">{email}</span>
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Admin</span>
               </div>
-              <div className="w-12 h-6 bg-blue-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <p className="text-white font-medium">Support Tickets</p>
-                <p className="text-xs text-zinc-500">
-                  Email alerts for new tickets
-                </p>
-              </div>
-              <div className="w-12 h-6 bg-blue-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <p className="text-white font-medium">Revenue Updates</p>
-                <p className="text-xs text-zinc-500">
-                  Monthly revenue reports
-                </p>
-              </div>
-              <div className="w-12 h-6 bg-zinc-600 rounded-full relative cursor-pointer">
-                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -103,83 +48,83 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold text-white">Database</h2>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
               <div>
-                <p className="text-white font-medium">Supabase Status</p>
-                <p className="text-xs text-zinc-500">Database connection</p>
+                <p className="text-white font-medium">Supabase</p>
+                <p className="text-xs text-zinc-500">PostgreSQL — Row Level Security enabled</p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold">
+              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30">
                 Connected
               </span>
             </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
               <div>
-                <p className="text-white font-medium">Data Backup</p>
-                <p className="text-xs text-zinc-500">Last backup: Today</p>
+                <p className="text-white font-medium">Tables</p>
+                <p className="text-xs text-zinc-500">agents, messages, orders, subscriptions, payment_requests, support_tickets</p>
               </div>
-              <button className="px-4 py-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-sm transition-all">
-                Backup Now
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* API Keys */}
-        <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
-          <div className="flex items-center gap-3 mb-4">
-            <Key className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-semibold text-white">API Keys</h2>
-          </div>
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-white/5">
-              <p className="text-zinc-400 text-sm mb-2">Supabase URL</p>
-              <code className="text-xs text-zinc-500 font-mono">
-                https://atyjeaegzgtpbdawbjnq.supabase.co
-              </code>
-            </div>
-            <div className="p-3 rounded-lg bg-white/5">
-              <p className="text-zinc-400 text-sm mb-2">Stripe Status</p>
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-semibold">
-                Test Mode
+              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-semibold border border-blue-500/30">
+                6 tables
               </span>
             </div>
           </div>
         </div>
 
-        {/* Email Configuration */}
+        {/* Email */}
         <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
           <div className="flex items-center gap-3 mb-4">
             <Mail className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-semibold text-white">
-              Email Configuration
-            </h2>
+            <h2 className="text-xl font-semibold text-white">Email Service</h2>
           </div>
           <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-white/5">
-              <p className="text-zinc-400 text-sm mb-2">Support Email</p>
-              <p className="text-white font-mono">workb9382@gmail.com</p>
-            </div>
-            <div className="p-3 rounded-lg bg-white/5">
-              <p className="text-zinc-400 text-sm mb-2">Email Service</p>
-              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold">
-                Gmail (Nodemailer)
+            <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+              <div>
+                <p className="text-white font-medium">Resend</p>
+                <p className="text-xs text-zinc-500">Transactional emails — payment notifications, plan activation</p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30">
+                Active
               </span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+              <div>
+                <p className="text-white font-medium">Admin Email</p>
+                <p className="text-xs text-zinc-500">Payment requests notifications go here</p>
+              </div>
+              <span className="text-zinc-400 text-sm font-mono">dj9581907@gmail.com</span>
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Save Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="flex justify-end"
-      >
-        <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all">
-          Save Changes
-        </button>
+        {/* API Keys info */}
+        <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <Key className="w-6 h-6 text-purple-400" />
+            <h2 className="text-xl font-semibold text-white">Services</h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              { name: "Supabase",    status: "Connected",   color: "green" },
+              { name: "Resend",      status: "Active",      color: "green" },
+              { name: "OpenAI",      status: "Via Backend", color: "blue"  },
+              { name: "Render.com",  status: "Backend API", color: "blue"  },
+              { name: "Vercel",      status: "Frontend",    color: "blue"  },
+            ].map(s => {
+              const colors: Record<string, string> = {
+                green: "bg-green-500/20 text-green-400 border-green-500/30",
+                blue:  "bg-blue-500/20 text-blue-400 border-blue-500/30",
+              };
+              return (
+                <div key={s.name} className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                  <p className="text-white font-medium">{s.name}</p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${colors[s.color]}`}>
+                    {s.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </motion.div>
     </div>
   );

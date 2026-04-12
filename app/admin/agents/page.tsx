@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+// toggle/delete still use direct supabase for speed
 interface Agent {
   id: string;
   agent_id: string;
@@ -43,29 +44,12 @@ export default function AgentsManagement() {
   }, [searchTerm, filterStatus, agents]);
 
   const fetchAgents = async () => {
-    const supabase = createClient();
-
     try {
-      const { data: agentsData } = await supabase
-        .from("agents")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // Get user emails
-      const agentsWithEmails = await Promise.all(
-        (agentsData || []).map(async (agent) => {
-          const { data: user } = await supabase.auth.admin.getUserById(
-            agent.user_id
-          );
-          return {
-            ...agent,
-            user_email: user?.user?.email || "Unknown",
-          };
-        })
-      );
-
-      setAgents(agentsWithEmails);
-      setFilteredAgents(agentsWithEmails);
+      const res = await fetch("/api/admin/agents");
+      if (!res.ok) { setLoading(false); return; }
+      const data = await res.json();
+      setAgents(data.agents || []);
+      setFilteredAgents(data.agents || []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching agents:", error);

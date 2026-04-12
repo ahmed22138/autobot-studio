@@ -75,7 +75,17 @@ export default function AdminDashboard() {
         .from("agents")
         .select("user_id", { count: "exact", head: true });
 
-      // Get unique users
+      // Get real user count from admin API
+      let realUserCount = 0;
+      try {
+        const usersRes = await fetch("/api/admin/users");
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          realUserCount = usersData.count || 0;
+        }
+      } catch { /* fallback to agent count */ }
+
+      // Get unique users from agents as fallback
       const { data: agentsData } = await supabase
         .from("agents")
         .select("user_id, status");
@@ -132,8 +142,8 @@ export default function AdminDashboard() {
       setRecentActivity(recentTickets || []);
 
       setStats({
-        totalUsers: uniqueUsers.size,
-        activeUsers: uniqueUsers.size,
+        totalUsers: realUserCount || uniqueUsers.size,
+        activeUsers: realUserCount || uniqueUsers.size,
         inactiveUsers: 0,
         totalAgents,
         activeAgents,
