@@ -46,7 +46,6 @@ function IntegrationsContent() {
   };
 
   const handleConnect = async () => {
-    if (!phone.trim()) { setError("Apna WhatsApp number daalo"); return; }
     if (!agentId) { setError("Agent select karo"); return; }
     setError("");
     setSaving(true);
@@ -54,7 +53,7 @@ function IntegrationsContent() {
       const res = await fetch("/api/integrations/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone_number: phone, agent_id: agentId }),
+        body: JSON.stringify({ phone_number: TWILIO_NUMBER, agent_id: agentId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -138,8 +137,8 @@ function IntegrationsContent() {
           {integration && (
             <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/15 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">Tumhara WhatsApp</span>
-                <span className="text-white font-mono">{integration.phone_number}</span>
+                <span className="text-zinc-500">WhatsApp Number</span>
+                <span className="text-white font-mono">{TWILIO_NUMBER}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-500">Active Agent</span>
@@ -154,18 +153,6 @@ function IntegrationsContent() {
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                 <div className="pt-5 space-y-4">
-                  <div>
-                    <label className="block text-sm text-zinc-400 mb-2">Apna WhatsApp Number</label>
-                    <input
-                      type="tel"
-                      placeholder="03001234567"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-600 outline-none focus:border-green-500/50 text-sm"
-                    />
-                    <p className="text-zinc-600 text-xs mt-1">Pakistani number: 03XX-XXXXXXX</p>
-                  </div>
-
                   <div>
                     <label className="block text-sm text-zinc-400 mb-2">Agent Select karo</label>
                     <select value={agentId} onChange={e => setAgentId(e.target.value)}
