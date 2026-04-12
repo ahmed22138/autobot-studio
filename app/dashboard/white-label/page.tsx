@@ -1,18 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Palette, Upload, Eye } from "lucide-react";
+import { Palette, Upload, Eye, X, CheckCircle } from "lucide-react";
 import FeatureGate from "@/components/FeatureGate";
+import { createClient } from "@/lib/supabase/client";
 
 function WhiteLabelContent() {
-  const [brandName, setBrandName] = useState("");
+  const [brandName, setBrandName]     = useState("");
   const [primaryColor, setPrimaryColor] = useState("#3b82f6");
-  const [saved, setSaved] = useState(false);
+  const [logo, setLogo]               = useState<string | null>(null);
+  const [logoName, setLogoName]       = useState("");
+  const [dragging, setDragging]       = useState(false);
+  const [saved, setSaved]             = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [error, setError]             = useState("");
+  const fileInputRef                  = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const processFile = (file: File) => {
+    setError("");
+    if (!file.type.startsWith("image/")) { setError("Sirf image files allowed hain."); return; }
+    if (file.size > 2 * 1024 * 1024) { setError("Max 2MB logo size."); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => { setLogo(e.target?.result as string); setLogoName(file.name); };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not logged in");
+
+      const { error: upsertErr } = await supabase.from("white_label_settings").upsert({
+        user_id:       user.id,
+        brand_name:    brandName || null,
+        primary_color: primaryColor,
+        logo_base64:   logo || null,
+        updated_at:    new Date().toISOString(),
+      }, { onConflict: "user_id" });
+
+      if (upsertErr) throw upsertErr;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -79,25 +131,46 @@ function WhiteLabelContent() {
             </div>
 
             <div>
-              <label className="block text-sm text-zinc-400 mb-1.5">
-                Logo Upload
-              </label>
-              <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-white/20 transition-all cursor-pointer">
-                <Upload className="w-8 h-8 text-zinc-500 mx-auto mb-2" />
-                <p className="text-zinc-500 text-sm">
-                  Click or drag to upload your logo
-                </p>
-                <p className="text-zinc-600 text-xs mt-1">
-                  PNG, SVG up to 2MB
-                </p>
-              </div>
+              <label className="block text-sm text-zinc-400 mb-1.5">Logo Upload</label>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+              {logo ? (
+                <div className="border border-white/10 rounded-xl p-4 flex items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logo} alt="Logo preview" className="w-16 h-16 object-contain rounded-lg bg-white/5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{logoName}</p>
+                    <p className="text-zinc-500 text-xs">Logo ready</p>
+                  </div>
+                  <button onClick={() => { setLogo(null); setLogoName(""); }}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-zinc-500 hover:text-white transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                    dragging ? "border-purple-500/60 bg-purple-500/10" : "border-white/10 hover:border-white/30 hover:bg-white/5"
+                  }`}>
+                  <Upload className={`w-8 h-8 mx-auto mb-2 ${dragging ? "text-purple-400" : "text-zinc-500"}`} />
+                  <p className="text-zinc-400 text-sm">{dragging ? "Drop karo!" : "Click ya drag karke logo upload karo"}</p>
+                  <p className="text-zinc-600 text-xs mt-1">PNG, JPG, SVG — max 2MB</p>
+                </div>
+              )}
             </div>
+
+            {error && <p className="text-red-400 text-sm">{error}</p>}
 
             <button
               onClick={handleSave}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium transition-all"
+              disabled={saving}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {saved ? "Saved!" : "Save Branding"}
+              {saved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : saving ? "Saving..." : "Save Branding"}
             </button>
           </motion.div>
 
@@ -122,15 +195,17 @@ function WhiteLabelContent() {
                 style={{ backgroundColor: primaryColor + "20" }}
               >
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden"
                   style={{ backgroundColor: primaryColor + "30" }}
                 >
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: primaryColor }}
-                  >
-                    {brandName ? brandName[0]?.toUpperCase() : "A"}
-                  </span>
+                  {logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logo} alt="logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-bold" style={{ color: primaryColor }}>
+                      {brandName ? brandName[0]?.toUpperCase() : "A"}
+                    </span>
+                  )}
                 </div>
                 <span className="text-white text-sm font-medium">
                   {brandName || "AutoBot Studio"}
