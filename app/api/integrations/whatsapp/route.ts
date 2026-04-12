@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     user_id:      user.id,
     phone_number: formatted,
     agent_id,
-    status:       "pending",
+    status:       "active",
     updated_at:   new Date().toISOString(),
   }, { onConflict: "user_id" });
 
