@@ -50,6 +50,9 @@ export default function AdminPaymentsPage() {
     });
     if (res.ok) {
       setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "approved" } : r));
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(`Approve failed: ${data.error || res.status}`);
     }
     setActionId(null);
   };

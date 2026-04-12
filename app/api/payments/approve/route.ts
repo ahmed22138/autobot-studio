@@ -27,24 +27,39 @@ export async function POST(req: NextRequest) {
 
   if (!payReq) return NextResponse.json({ error: "Request not found" }, { status: 404 });
 
+  // Safety check
+  if (!payReq.user_id) {
+    return NextResponse.json({ error: "Payment request has no user_id" }, { status: 400 });
+  }
+
   // 1. Update payment request status
-  await admin.from("payment_requests").update({
+  const { error: updateErr } = await admin.from("payment_requests").update({
     status:      "approved",
     reviewed_at: new Date().toISOString(),
     reviewed_by: user.id,
   }).eq("id", request_id);
 
+  if (updateErr) {
+    console.error("Failed to update payment_requests:", updateErr);
+    return NextResponse.json({ error: "Failed to update payment status" }, { status: 500 });
+  }
+
   // 2. Upsert subscription — activate the plan
   const renewsAt = new Date();
   renewsAt.setMonth(renewsAt.getMonth() + 1);
 
-  await admin.from("subscriptions").upsert({
+  const { error: subErr } = await admin.from("subscriptions").upsert({
     user_id:    payReq.user_id,
     plan:       payReq.plan,
     status:     "active",
     renews_at:  renewsAt.toISOString(),
     updated_at: new Date().toISOString(),
   }, { onConflict: "user_id" });
+
+  if (subErr) {
+    console.error("Failed to upsert subscription:", subErr);
+    return NextResponse.json({ error: `Subscription failed: ${subErr.message}` }, { status: 500 });
+  }
 
   // 3. Email user
   const resendKey = process.env.RESEND_API_KEY;
