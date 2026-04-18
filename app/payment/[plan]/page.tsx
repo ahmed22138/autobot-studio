@@ -19,8 +19,8 @@ const PAYMENT_METHODS = [
     icon: Smartphone,
     color: "red",
     fields: [
-      { key: "name",   label: "Account Name",   value: process.env.NEXT_PUBLIC_JAZZCASH_NAME   || "AutoBot Studio" },
-      { key: "number", label: "Mobile Number",  value: process.env.NEXT_PUBLIC_JAZZCASH_NUMBER || "03XX-XXXXXXX"   },
+      { key: "name",   label: "Account Name",   value: process.env.NEXT_PUBLIC_JAZZCASH_NAME   || "Muhammad Ahmed" },
+      { key: "number", label: "Mobile Number",  value: process.env.NEXT_PUBLIC_JAZZCASH_NUMBER || "03293916967"   },
     ],
   },
   {
@@ -29,8 +29,8 @@ const PAYMENT_METHODS = [
     icon: Wallet,
     color: "green",
     fields: [
-      { key: "name",   label: "Account Name",   value: process.env.NEXT_PUBLIC_EASYPAISA_NAME   || "AutoBot Studio" },
-      { key: "number", label: "Mobile Number",  value: process.env.NEXT_PUBLIC_EASYPAISA_NUMBER || "03XX-XXXXXXX"   },
+      { key: "name",   label: "Account Name",   value: process.env.NEXT_PUBLIC_EASYPAISA_NAME   || "Muhammad Ahmed" },
+      { key: "number", label: "Mobile Number",  value: process.env.NEXT_PUBLIC_EASYPAISA_NUMBER || "03293916967"   },
     ],
   },
   {
@@ -39,7 +39,7 @@ const PAYMENT_METHODS = [
     icon: Building2,
     color: "blue",
     fields: [
-      { key: "bank",    label: "Bank Name",     value: process.env.NEXT_PUBLIC_BANK_NAME         || "HBL / Meezan"   },
+      { key: "bank",    label: "Bank Name",     value: process.env.NEXT_PUBLIC_BANK_NAME         || "HBL / Meezan / sadapay"   },
       { key: "name",    label: "Account Name",  value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || "AutoBot Studio" },
       { key: "account", label: "Account No",   value: process.env.NEXT_PUBLIC_BANK_ACCOUNT      || "XXXX-XXXXXXXXX" },
     ],
