@@ -7,8 +7,8 @@ import { Copy, Check, Upload, Loader2, CheckCircle, ArrowLeft, Smartphone, Build
 import { createClient } from "@/lib/supabase/client";
 
 const PLAN_INFO: Record<string, { label: string; pricePKR: number; color: string }> = {
-  medium:  { label: "Medium",  pricePKR: 15000, color: "blue"   },
-  premium: { label: "Premium", pricePKR: 60000, color: "purple" },
+  medium:  { label: "Medium",  pricePKR: 8,500, color: "blue"   },
+  premium: { label: "Premium", pricePKR: 56.000, color: "purple" },
 };
 
 // Payment details — set these in Vercel env vars
@@ -39,9 +39,9 @@ const PAYMENT_METHODS = [
     icon: Building2,
     color: "blue",
     fields: [
-      { key: "bank",    label: "Bank Name",     value: process.env.NEXT_PUBLIC_BANK_NAME         || "HBL / Meezan / sadapay"   },
-      { key: "name",    label: "Account Name",  value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || "AutoBot Studio" },
-      { key: "account", label: "Account No",   value: process.env.NEXT_PUBLIC_BANK_ACCOUNT      || "XXXX-XXXXXXXXX" },
+      { key: "bank",    label: "Bank Name",     value: process.env.NEXT_PUBLIC_BANK_NAME         || "sadapay"   },
+      { key: "name",    label: "Account Name",  value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || "Muhammad Ahmed" },
+      { key: "account", label: "Account No",   value: process.env.NEXT_PUBLIC_BANK_ACCOUNT      || "03293916967" },
     ],
   },
 ];
