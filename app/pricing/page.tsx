@@ -35,7 +35,7 @@ const plans = [
     name: "medium",
     label: "Medium",
     price: "PKR 8,500",
-    pricePKR:"8500",
+    pricePKR: 8500,
     period: "/mo",
     description: "For growing businesses that need more power",
     icon: Star,
