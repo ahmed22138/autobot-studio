@@ -57,7 +57,7 @@ const plans = [
     name: "premium",
     label: "Premium",
     price: "PKR 56,000",
-    pricePKR: "56000",
+    pricePKR: 56000,
     period: "/mo",
     description: "Unlimited power for enterprise needs",
     icon: Crown,
